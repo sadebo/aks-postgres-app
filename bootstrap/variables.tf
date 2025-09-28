@@ -28,8 +28,8 @@ variable "sp_object_id" {
   type        = string
 }
 
-variable "subscription_id" {
-  description = "The Subscription ID to deploy resources into"
-  type        = string
+# variable "subscription_id" {
+#   description = "The Subscription ID to deploy resources into"
+#   type        = string
   
-}
+# }
