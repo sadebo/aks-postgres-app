@@ -20,6 +20,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.9.7
+
     - name: Azure Login
       uses: azure/login@v1
       with:
@@ -41,7 +46,7 @@ jobs:
   build:
     name: Build & Deploy Flask App
     runs-on: ubuntu-latest
-    needs: infra # 👈 ensures infra job finishes first
+    needs: infra
 
     steps:
     - uses: actions/checkout@v3
@@ -58,24 +63,19 @@ jobs:
         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-    - name: Get ACR Name from Terraform Output
-      run: |
-        ACR_NAME=$(terraform -chdir=terraform output -raw acr_name)
-        echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
-
     - name: ACR Login
-      run: az acr login --name $ACR_NAME
+      run: az acr login --name parallelacr987601
 
     - name: Build & Push Docker Image
       uses: docker/build-push-action@v4
       with:
         context: ./app
         push: true
-        tags: ${{ env.ACR_NAME }}.azurecr.io/flask-app:${{ github.sha }}
+        tags: parallelacr987601.azurecr.io/flask-app:${{ github.sha }}
 
     - name: Update manifests with new image tag
       run: |
-        sed -i "s|image: .*|image: ${{ env.ACR_NAME }}.azurecr.io/flask-app:${{ github.sha }}|" manifests/base/deployment.yaml
+        sed -i "s|image: .*|image: parallelacr987601.azurecr.io/flask-app:${{ github.sha }}|" manifests/base/deployment.yaml
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add manifests/base/deployment.yaml
