@@ -19,29 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  bootstrap:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.6.0
-
-    - name: Run Bootstrap (Remote State)
-      run: |
-        terraform -chdir=bootstrap init -input=false
-        terraform -chdir=bootstrap apply -auto-approve
-
   infra:
     runs-on: ubuntu-latest
-    needs: bootstrap
     steps:
     - uses: actions/checkout@v3
 
