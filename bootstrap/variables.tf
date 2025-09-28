@@ -11,9 +11,8 @@ variable "location" {
 }
 
 variable "storage_account_name" {
-  description = "Globally unique storage account name for Terraform state"
+  description = "Globally unique storage account name (3–24 lowercase letters/numbers)"
   type        = string
-  # Must be lowercase, 3–24 characters, unique across Azure
   default     = "mytfstateacct01"
 }
 
@@ -27,9 +26,3 @@ variable "sp_object_id" {
   description = "Object ID of the Service Principal used by GitHub Actions"
   type        = string
 }
-
-# variable "subscription_id" {
-#   description = "The Subscription ID to deploy resources into"
-#   type        = string
-  
-# }
