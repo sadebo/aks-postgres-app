@@ -21,8 +21,3 @@ variable "container_name" {
   type        = string
   default     = "tfstate"
 }
-
-variable "sp_object_id" {
-  description = "Object ID of the Service Principal used by GitHub Actions"
-  type        = string
-}

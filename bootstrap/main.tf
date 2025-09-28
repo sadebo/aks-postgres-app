@@ -20,10 +20,3 @@ resource "azurerm_storage_container" "tfstate" {
   storage_account_name  = azurerm_storage_account.tfstate.name
   container_access_type = "private"
 }
-
-# Assign GitHub Actions Service Principal access to blob data
-resource "azurerm_role_assignment" "sp_blob_data_contrib" {
-  principal_id         = var.sp_object_id
-  role_definition_name = "Storage Blob Data Contributor"
-  scope                = azurerm_storage_account.tfstate.id
-}

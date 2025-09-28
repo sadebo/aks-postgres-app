@@ -37,8 +37,7 @@ jobs:
     - name: Run Bootstrap (Remote State)
       run: |
         terraform -chdir=bootstrap init -input=false
-        terraform -chdir=bootstrap apply -auto-approve \
-          -var sp_object_id=${{ secrets.AZURE_SP_OBJECT_ID }}
+        terraform -chdir=bootstrap apply -auto-approve
 
   infra:
     runs-on: ubuntu-latest

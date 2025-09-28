@@ -32,13 +32,12 @@ jobs:
     - name: Run Bootstrap (Remote State)
       run: |
         terraform -chdir=bootstrap init -input=false
-        terraform -chdir=bootstrap apply -auto-approve \
-          -var sp_object_id=${{ secrets.AZURE_SP_OBJECT_ID }}
+        terraform -chdir=bootstrap apply -auto-approve
 
   destroy:
     runs-on: ubuntu-latest
     environment:
-      name: destroy-approval # 🔐 requires manual approval in GitHub
+      name: destroy-approval # 🔐 manual approval required in GitHub
     needs: bootstrap
     steps:
     - uses: actions/checkout@v3
