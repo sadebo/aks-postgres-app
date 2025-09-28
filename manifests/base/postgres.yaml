@@ -13,7 +13,6 @@ spec:
     version: "15"
   users:
     flaskuser:
-    # database user
     - superuser
     - createdb
   databases:
