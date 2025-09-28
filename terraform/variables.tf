@@ -16,8 +16,8 @@ variable "tenant_id" {
   default     = null
 }
 
-variable "subscription_id" {
-  description = "Azure subscription ID (optional)"
-  type        = string
-  default     = null
-}
+# variable "subscription_id" {
+#   description = "Azure subscription ID (optional)"
+#   type        = string
+#   default     = null
+# }
