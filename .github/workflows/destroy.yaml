@@ -17,7 +17,7 @@ jobs:
   destroy:
     runs-on: ubuntu-latest
     environment:
-      name: destroy-approval # 🔐 requires manual approval
+      name: destroy-approval # 🔐 requires manual approval in GitHub
     steps:
     - uses: actions/checkout@v3
 
