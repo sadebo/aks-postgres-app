@@ -5,3 +5,5 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
+- postgres.yaml
+- postgres-namespace.yaml # 👈 ensure namespace exists

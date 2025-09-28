@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_GITHUB_USERNAME/aks-postgres-app.git
+    repoURL: https://github.com/sadebo/aks-postgres-app.git
     targetRevision: main
     path: manifests/overlays/dev
   destination:

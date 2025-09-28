@@ -1,22 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd-self
+  name: flask-dev
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://argoproj.github.io/argo-helm
-    chart: argo-cd
-    targetRevision: 6.7.8
-    helm:
-      values: |
-        server:
-          service:
-            type: ClusterIP
+    repoURL: 'https://github.com/sadebo/aks-postgres-app.git'
+    targetRevision: main
+    path: manifests/overlays/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: dev
   syncPolicy:
     automated:
       prune: true
