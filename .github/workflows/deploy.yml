@@ -27,7 +27,7 @@ jobs:
         terraform_version: 1.6.0
 
     - name: Terraform Init
-      run: terraform -chdir=terraform init -input=false \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      run: terraform -chdir=terraform init -input=false
 
     - name: Terraform Apply
       run: terraform -chdir=terraform apply -auto-approve \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}

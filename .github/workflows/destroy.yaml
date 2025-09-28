@@ -14,7 +14,7 @@ jobs:
   destroy:
     runs-on: ubuntu-latest
     environment:
-      name: destroy-approval # 🔐 requires manual approval
+      name: destroy-approval # 🔐 requires manual approval in GitHub
     steps:
     - uses: actions/checkout@v3
 
@@ -24,7 +24,7 @@ jobs:
         terraform_version: 1.6.0
 
     - name: Terraform Init
-      run: terraform -chdir=terraform init -input=false \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      run: terraform -chdir=terraform init -input=false
 
     - name: Terraform Destroy
       run: terraform -chdir=terraform destroy -auto-approve \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
