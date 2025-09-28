@@ -1,4 +1,4 @@
-name: Build & Deploy App
+name: Build & Deploy App - Flask with Postgres
 
 on:
   push:
