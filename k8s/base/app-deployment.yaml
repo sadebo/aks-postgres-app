@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: myaksacr01.azurecr.io/flask-app:latest
+        image: parallelacr2901.azurecr.io/flask-app:latest
         imagePullPolicy: Always
         env:
         - name: DB_HOST

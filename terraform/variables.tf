@@ -19,7 +19,7 @@ variable "aks_cluster_name" {
 variable "acr_name" {
   description = "Name of the Azure Container Registry (must be globally unique)"
   type        = string
-  default     = "myaksacr01"
+  default     = "parallelacr2901"
 }
 
 variable "node_count" {

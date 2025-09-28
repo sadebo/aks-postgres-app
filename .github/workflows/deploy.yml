@@ -56,14 +56,14 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Azure Container Registry Login
-      run: az acr login --name myaksacr01
+      run: az acr login --name parallelacr2901
 
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v4
       with:
         context: ./app
         push: true
-        tags: myaksacr01.azurecr.io/flask-app:latest
+        tags: parallelacr2901.azurecr.io/flask-app:latest
 
   deploy:
     runs-on: ubuntu-latest
