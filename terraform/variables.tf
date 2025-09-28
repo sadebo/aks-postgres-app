@@ -1,35 +1,19 @@
-variable "rg_name" {
-  description = "Resource group name"
+variable "subscription_id" {
+  description = "Azure subscription ID"
   type        = string
-  default     = "rg-aks-postgres"
 }
 
-variable "location" {
-  description = "Azure region"
+variable "tenant_id" {
+  description = "Azure tenant ID"
   type        = string
-  default     = "eastus"
 }
 
-variable "aks_cluster_name" {
-  description = "AKS cluster name"
+variable "client_id" {
+  description = "Service Principal client ID"
   type        = string
-  default     = "aks-postgres-cluster"
 }
 
-variable "acr_name" {
-  description = "Azure Container Registry name (must be unique)"
+variable "client_secret" {
+  description = "Service Principal client secret"
   type        = string
-  default     = "myaksacr01"
-}
-
-variable "node_count" {
-  description = "Number of AKS nodes"
-  type        = number
-  default     = 2
-}
-
-variable "node_size" {
-  description = "VM size for AKS nodes"
-  type        = string
-  default     = "Standard_B2s"
 }

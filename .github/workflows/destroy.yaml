@@ -1,24 +1,29 @@
-name: Destroy Infrastructure
+name: Destroy Infra + Addons
 
 on:
   workflow_dispatch:
+    # manual trigger only
 
+permissions:
+  contents: read
 
 jobs:
-  destroy:
+  destroy-addons:
+    name: Destroy Addons (ArgoCD, Ingress, Cert-manager, Postgres Operator)
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.9.7
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Export ARM env
       run: |
@@ -30,5 +35,36 @@ jobs:
     - name: Terraform Init
       run: terraform -chdir=terraform init -input=false
 
-    - name: Terraform Destroy
+    - name: Terraform Destroy Addons
+      run: terraform -chdir=terraform destroy -auto-approve \ -target=helm_release.nginx_ingress \ -target=helm_release.argocd \ -target=helm_release.cert_manager \ -target=helm_release.postgres_operator
+
+  destroy-infra:
+    name: Destroy Infra (AKS + ACR + RG)
+    runs-on: ubuntu-latest
+    needs: destroy-addons
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.9.7
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Export ARM env
+      run: |
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+
+    - name: Terraform Init
+      run: terraform -chdir=terraform init -input=false
+
+    - name: Terraform Destroy Infra
       run: terraform -chdir=terraform destroy -auto-approve
