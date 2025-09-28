@@ -14,7 +14,7 @@ jobs:
   destroy:
     runs-on: ubuntu-latest
     environment:
-      name: destroy-approval # 🔐 requires manual approval in GitHub
+      name: destroy-approval # 🔐 requires manual approval
     steps:
     - uses: actions/checkout@v3
 
@@ -23,11 +23,18 @@ jobs:
       with:
         terraform_version: 1.6.0
 
+    - name: Export ARM_* env vars
+      run: |
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+
     - name: Terraform Init
       run: terraform -chdir=terraform init -input=false
 
     - name: Terraform Destroy
-      run: terraform -chdir=terraform destroy -auto-approve \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      run: terraform -chdir=terraform destroy -auto-approve
 
     - name: Cleanup K8s Resources
       if: always()
