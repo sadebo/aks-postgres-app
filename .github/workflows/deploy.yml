@@ -1,0 +1,78 @@
+name: Provision AKS + Deploy App
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.6.0
+
+    - name: Terraform Init
+      run: terraform -chdir=terraform init
+
+    - name: Terraform Apply
+      run: terraform -chdir=terraform apply -auto-approve
+
+    - name: Save kubeconfig
+      run: |
+        terraform -chdir=terraform output -raw kube_config > kubeconfig.yaml
+        echo "KUBECONFIG=$(pwd)/kubeconfig.yaml" >> $GITHUB_ENV
+
+  build:
+    runs-on: ubuntu-latest
+    needs: infra
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./app
+        push: true
+        tags: ghcr.io/${{ github.repository }}/flask-app:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Deploy App + Postgres
+      run: |
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/postgres-operator.yaml
+        sleep 30
+        kubectl apply -f k8s/postgres-cluster.yaml
+        kubectl apply -f k8s/app-deployment.yaml
+        kubectl apply -f k8s/app-service.yaml
