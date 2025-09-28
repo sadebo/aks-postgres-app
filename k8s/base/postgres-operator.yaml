@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: postgres-operator
   namespace: default
+  labels:
+    app: postgres-operator
 spec:
   replicas: 1
   selector:

@@ -8,13 +8,13 @@ output "aks_cluster_name" {
   value       = azurerm_kubernetes_cluster.aks.name
 }
 
-output "kube_config" {
-  description = "Raw Kubernetes config to connect to the cluster"
-  value       = azurerm_kubernetes_cluster.aks.kube_config_raw
-  sensitive   = true
+output "acr_login_server" {
+  description = "Login server URL of the Azure Container Registry"
+  value       = azurerm_container_registry.acr.login_server
 }
 
-output "acr_login_server" {
-  description = "ACR login server"
-  value       = azurerm_container_registry.acr.login_server
+output "kube_config" {
+  description = "Raw kubeconfig for accessing the AKS cluster"
+  value       = azurerm_kubernetes_cluster.aks.kube_config_raw
+  sensitive   = true
 }

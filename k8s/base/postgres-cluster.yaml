@@ -10,6 +10,7 @@ spec:
   numberOfInstances: 1
   users:
     app_user:
+    # Database user
     - superuser
     - createdb
   databases:

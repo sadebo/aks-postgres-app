@@ -1,0 +1,6 @@
+resources:
+- app-deployment.yaml
+- app-service.yaml
+- postgres-operator.yaml
+- postgres-cluster.yaml
+- secrets.yaml

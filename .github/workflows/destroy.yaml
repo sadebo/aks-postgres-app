@@ -1,14 +1,21 @@
-name: Destroy AKS Infra
+name: Destroy AKS + ACR Infra
 
 on:
   workflow_dispatch:
-    # manual trigger only
+    inputs:
+      environment:
+        description: "Which environment to destroy (dev/test/prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+        - dev
+        - test
+        - prod
 
 jobs:
-  destroy:
+  bootstrap:
     runs-on: ubuntu-latest
-    environment:
-      name: destroy-approval # 🔐 Requires manual approval
     steps:
     - uses: actions/checkout@v3
 
@@ -22,8 +29,39 @@ jobs:
       with:
         terraform_version: 1.6.0
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init
+    - name: Run Bootstrap (Remote State)
+      run: |
+        terraform -chdir=bootstrap init -input=false
+        terraform -chdir=bootstrap apply -auto-approve \
+          -var sp_object_id=${{ secrets.AZURE_SP_OBJECT_ID }}
 
-    - name: Terraform Destroy
+  destroy:
+    runs-on: ubuntu-latest
+    environment:
+      name: destroy-approval # 🔐 requires manual approval in GitHub
+    needs: bootstrap
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.6.0
+
+    - name: Terraform Init (main project with remote backend)
+      run: terraform -chdir=terraform init -input=false
+
+    - name: Terraform Destroy (main project)
       run: terraform -chdir=terraform destroy -auto-approve
+
+    - name: Cleanup K8s Resources
+      if: always()
+      run: |
+        ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+        echo "Cleaning up Kustomize overlay for: $ENVIRONMENT"
+        kubectl delete -k k8s/overlays/$ENVIRONMENT || true

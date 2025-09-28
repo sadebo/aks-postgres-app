@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: flask-app
+  labels:
+    app: flask-app
 spec:
   replicas: 2
   selector:
@@ -15,6 +17,7 @@ spec:
       containers:
       - name: flask-app
         image: myaksacr01.azurecr.io/flask-app:latest
+        imagePullPolicy: Always
         env:
         - name: DB_HOST
           value: demo-cluster.default.svc.cluster.local
@@ -27,5 +30,7 @@ spec:
             secretKeyRef:
               name: db-secret
               key: password
+        - name: DB_PORT
+          value: "5432"
         ports:
         - containerPort: 5000
