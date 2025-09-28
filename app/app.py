@@ -1,31 +1,39 @@
-from flask import Flask
-import psycopg2
 import os
+import psycopg2
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
+# Get DATABASE_URL from environment (injected via K8s secret)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 def get_db_connection():
-    conn = psycopg2.connect(
-        dbname=os.getenv("DB_NAME", "appdb"),
-        user=os.getenv("DB_USER", "app_user"),
-        password=os.getenv("DB_PASSWORD", "SuperSecure123"),
-        host=os.getenv("DB_HOST", "demo-cluster.default.svc.cluster.local"),
-        port=os.getenv("DB_PORT", "5432")
-    )
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 @app.route("/")
 def index():
+    return "Hello from Flask + AKS + ArgoCD + Postgres!"
+
+@app.route("/healthz")
+def healthz():
+    return jsonify(status="ok"), 200
+
+@app.route("/users")
+def users():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT 'Hello from Postgres via Flask!'")
-        msg = cur.fetchone()[0]
+        cur.execute("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT);")
+        cur.execute("INSERT INTO users (name) VALUES ('User from Flask!') RETURNING id, name;")
+        conn.commit()
+        cur.execute("SELECT id, name FROM users;")
+        rows = cur.fetchall()
         cur.close()
         conn.close()
-        return msg
+        return jsonify(rows)
     except Exception as e:
-        return f"Database connection failed: {e}"
+        return jsonify(error=str(e)), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

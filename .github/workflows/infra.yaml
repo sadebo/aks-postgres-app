@@ -1,8 +1,12 @@
-name: Destroy Infra
+name: Infra
 
 on:
   workflow_dispatch:
-
+  push:
+    branches:
+    - main
+    paths:
+    - 'terraform/**'
 
 jobs:
   terraform:
@@ -24,5 +28,5 @@ jobs:
     - name: Terraform Init
       run: terraform -chdir=terraform init -input=false
 
-    - name: Terraform Destroy
-      run: terraform -chdir=terraform destroy -auto-approve
+    - name: Terraform Apply
+      run: terraform -chdir=terraform apply -auto-approve

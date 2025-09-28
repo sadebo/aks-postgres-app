@@ -1,8 +1,0 @@
-bases:
-- ../../base
-
-patchesStrategicMerge:
-- replica-patch.yaml
-- secret-patch.yaml
-
-namePrefix: prod-

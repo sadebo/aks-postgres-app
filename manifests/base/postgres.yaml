@@ -1,0 +1,29 @@
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: flask-postgres
+  labels:
+    app: flask-app
+spec:
+  teamId: "flask"
+  volume:
+    size: 10Gi
+  numberOfInstances: 1
+  postgresql:
+    version: "15"
+  users:
+    flaskuser:
+    # database user
+    - superuser
+    - createdb
+  databases:
+    flaskdb: flaskuser
+  preparedDatabases:
+    flaskdb: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
