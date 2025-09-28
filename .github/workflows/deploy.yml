@@ -8,10 +8,7 @@ on:
         required: true
         default: "dev"
         type: choice
-        options:
-        - dev
-        - test
-        - prod
+        options: [ dev, test, prod ]
   push:
     branches: [ "main" ]
 
@@ -24,21 +21,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.6.0
 
-    - name: Terraform Init (with remote backend)
-      run: terraform -chdir=terraform init -input=false
+    - name: Terraform Init
+      run: terraform -chdir=terraform init -input=false \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
 
-    - name: Terraform Apply (main project)
-      run: terraform -chdir=terraform apply -auto-approve
+    - name: Terraform Apply
+      run: terraform -chdir=terraform apply -auto-approve \ -var client_id=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }} \ -var client_secret=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }} \ -var tenant_id=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }} \ -var subscription_id=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
 
     - name: Save kubeconfig
       run: |
@@ -51,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Azure Login
+    - name: Azure Login (for ACR)
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -72,7 +64,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Azure Login
+    - name: Azure Login (for kubectl)
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -80,7 +72,7 @@ jobs:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
-        version: 'latest'
+        version: latest
 
     - name: Deploy App + Postgres (Kustomize Overlay)
       run: |
