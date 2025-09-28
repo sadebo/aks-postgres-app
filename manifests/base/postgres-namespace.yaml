@@ -6,4 +6,4 @@ resources:
 - service.yaml
 - ingress.yaml
 - postgres.yaml
-- postgres-namespace.yaml # 👈 ensure namespace exists
+- postgres-namespace.yaml # 👈  namespace exists

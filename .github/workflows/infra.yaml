@@ -1,27 +1,43 @@
-name: Deploy
+name: Provision Infra + Build & Deploy App
 
 on:
   push:
     branches:
     - main
+    paths:
+    - 'terraform/**'
+    - 'app/**'
+    - 'manifests/**'
+    - '.github/workflows/deploy.yaml'
+  workflow_dispatch:
+
 
 permissions:
-  contents: write # allow commits back to repo
-
+  contents: write
 jobs:
   infra:
+    name: Provision Infrastructure
     runs-on: ubuntu-latest
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.9.7
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Export ARM env
+      run: |
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
     - name: Terraform Init
       run: terraform -chdir=terraform init -input=false
@@ -30,55 +46,50 @@ jobs:
       run: terraform -chdir=terraform apply -auto-approve
 
   build:
-    needs: infra
+    name: Build & Deploy Flask App
     runs-on: ubuntu-latest
+    needs: infra # 👈 ensures infra runs first
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-    - name: Log in to ACR
-      run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login parallelacr987601.azurecr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Build and Push Docker image
+    - name: Export ARM env
       run: |
-        IMAGE_TAG=${GITHUB_SHA}
-        docker build -t parallelacr987601.azurecr.io/flask-app:$IMAGE_TAG ./app
-        docker push parallelacr987601.azurecr.io/flask-app:$IMAGE_TAG
-        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-    - name: Update manifests with new image
-      run: |
-        sed -i "s|image: .*|image: parallelacr987601.azurecr.io/flask-app:${IMAGE_TAG}|" manifests/base/deployment.yaml
+    - name: ACR Login
+      run: az acr login --name parallelacr987601
 
-    - name: Commit updated manifest
+    - name: Build & Push Docker Image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./app
+        push: true
+        tags: parallelacr987601.azurecr.io/flask-app:${{ github.sha }}
+
+    - name: Update manifests with new image tag
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+        sed -i "s|image: .*|image: parallelacr987601.azurecr.io/flask-app:${{ github.sha }}|" manifests/base/deployment.yaml
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
         git add manifests/base/deployment.yaml
-        git commit -m "Update flask-app image to ${IMAGE_TAG}" || echo "No changes to commit"
+        git commit -m "Update flask-app image to ${{ github.sha }}"
         git push
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: ArgoCD Sync
-      run: |
-        echo "ArgoCD will reconcile changes automatically via root-app.yaml"
-        echo "Check progress with: kubectl get applications -n argocd"
-    # Optional: Wait for TLS Secret (uncomment if you want CI to verify certs)
-    # - name: Wait for ArgoCD TLS Secret
+    - name: Get AKS Credentials
+      run: az aks get-credentials --resource-group rg-aks-postgres --name aks-postgres-cluster --overwrite-existing
+    # - name: Verify TLS secrets
     #   run: |
-    #     for i in {1..30}; do
-    #       if kubectl get secret argocd-tls -n argocd >/dev/null 2>&1; then
-    #         echo "TLS secret ready!"
-    #         exit 0
-    #       fi
-    #       echo "Waiting for TLS secret..."
-    #       sleep 30
-    #     done
-    #     echo "TLS secret not created in time"
-    #     exit 1
+    #     kubectl get secret argocd-tls -n argocd || exit 1
+    #     kubectl get secret flask-tls -n dev || exit 1
+
+    # - name: Smoke test Flask healthz
+    #   run: curl -vk https://flask.example.com/healthz
