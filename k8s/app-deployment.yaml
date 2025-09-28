@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: ghcr.io/YOUR_GITHUB/flask-app:latest
+        image: myaksacr01.azurecr.io/flask-app:latest
         env:
         - name: DB_HOST
           value: demo-cluster.default.svc.cluster.local
