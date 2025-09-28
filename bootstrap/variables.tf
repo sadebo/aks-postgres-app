@@ -27,3 +27,9 @@ variable "sp_object_id" {
   description = "Object ID of the Service Principal used by GitHub Actions"
   type        = string
 }
+
+variable "subscription_id" {
+  description = "The Subscription ID to deploy resources into"
+  type        = string
+  
+}
