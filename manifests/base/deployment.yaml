@@ -16,7 +16,6 @@ spec:
     spec:
       containers:
       - name: flask-app
-        # 👇 Hardcoded ACR image
         image: parallelacr987601.azurecr.io/flask-app:780ac82baea396abbfcf702ab88cba43caf10f1f
         ports:
         - containerPort: 5000
