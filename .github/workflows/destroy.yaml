@@ -1,4 +1,4 @@
-name: Provision Infra + Build & Deploy App
+name: Destroy Infra build
 
 on:
   push:
