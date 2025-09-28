@@ -172,3 +172,25 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.vscode/
+.DS_Store
+*.iml
+.idea/
+*.iws
+*.ipr
+out/
+*.log
+*.tmp
+*.swp
+k8s/secret.yaml
