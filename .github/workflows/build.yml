@@ -1,4 +1,4 @@
-name: Build & Push App
+name: Build & Deploy App
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
     - 'app/**'
     - 'manifests/**'
-    - '.github/workflows/build.yml'
+    - '.github/workflows/build.yaml'
   workflow_dispatch:
 
 
@@ -22,6 +22,13 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Export ARM env
+      run: |
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
     - name: ACR Login
       run: az acr login --name myaksacr01
@@ -52,23 +59,29 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Export ARM env
+      run: |
+        echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+
     - name: Get AKS Credentials
       run: az aks get-credentials --resource-group rg-aks-postgres --name aks-postgres-cluster --overwrite-existing
 
-    - name: Wait for cert-manager pods
+    - name: Check cert-manager pods
       run: |
-        echo "Checking cert-manager health..."
         kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
         kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
         kubectl rollout status deployment/cert-manager-cainjector -n cert-manager --timeout=120s
 
-    - name: Wait for ingress controller
-      run: |
-        echo "Checking ingress-nginx health..."
-        kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=120s
+    - name: Check ingress-nginx pods
+      run: kubectl rollout status deployment/ingress-nginx-controller -n ingress-nginx --timeout=120s
 
     - name: Verify TLS secrets
       run: |
-        echo "Checking if TLS secrets exist..."
         kubectl get secret argocd-tls -n argocd || exit 1
         kubectl get secret flask-tls -n dev || exit 1
+
+    - name: Smoke test Flask healthz
+      run: curl -vk https://flask.example.com/healthz
