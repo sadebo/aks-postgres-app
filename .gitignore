@@ -194,9 +194,6 @@ out/
 *.tmp
 *.swp
 k8s/secret.yaml
-k8s/base/secrets.yaml
-k8s/overlay/dev/secret-patch.yaml
-k8s/overlay/prod/secret-patch.yaml
 .env
 .env.*
 .venv/

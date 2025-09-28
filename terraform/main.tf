@@ -21,6 +21,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     name       = "default"
     node_count = var.node_count
     vm_size    = var.node_size
+
+    # ✅ Explicit upgrade settings to stop drift
+    upgrade_settings {
+      max_surge = "10%"
+    }
   }
 
   identity {
