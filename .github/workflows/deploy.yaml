@@ -44,7 +44,7 @@ jobs:
       run: terraform -chdir=terraform init -input=false -reconfigure
 
     - name: Terraform Apply Infra
-      run: terraform -chdir=terraform apply -auto-approve \ -target=azurerm_resource_group.rg \ -target=azurerm_container_registry.acr \ -target=azurerm_kubernetes_cluster.aks
+      run: terraform -chdir=terraform apply -auto-approve
 
   addons:
     name: Install Addons (ArgoCD, Ingress, Cert-manager, Postgres Operator)
@@ -111,7 +111,7 @@ jobs:
 
     - name: Get AKS Credentials
       run: az aks get-credentials --resource-group rg-aks-postgres --name aks-postgres-cluster --overwrite-existing
-    # Optional: Wait for TLS secrets
+    # Optional TLS check
     # - name: Wait for ArgoCD TLS Secret
     #   run: |
     #     for i in {1..30}; do
