@@ -32,8 +32,8 @@ jobs:
         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init -input=false
+    - name: Terraform Init (addons)
+      run: terraform -chdir=terraform init -input=false -reconfigure
 
     - name: Terraform Destroy Addons
       run: terraform -chdir=terraform destroy -auto-approve \ -target=helm_release.nginx_ingress \ -target=helm_release.argocd \ -target=helm_release.cert_manager \ -target=helm_release.postgres_operator
@@ -63,8 +63,8 @@ jobs:
         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init -input=false
+    - name: Terraform Init (infra)
+      run: terraform -chdir=terraform init -input=false -reconfigure
 
     - name: Terraform Destroy Infra
       run: terraform -chdir=terraform destroy -auto-approve

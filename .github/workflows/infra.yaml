@@ -40,11 +40,11 @@ jobs:
         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-    - name: Terraform Init
-      run: terraform -chdir=terraform init -input=false
+    - name: Terraform Init (infra)
+      run: terraform -chdir=terraform init -input=false -reconfigure
 
     - name: Terraform Apply Infra
-      run: terraform -chdir=terraform apply -auto-approve -target=azurerm_resource_group.rg -target=azurerm_container_registry.acr -target=azurerm_kubernetes_cluster.aks
+      run: terraform -chdir=terraform apply -auto-approve \ -target=azurerm_resource_group.rg \ -target=azurerm_container_registry.acr \ -target=azurerm_kubernetes_cluster.aks
 
   addons:
     name: Install Addons (ArgoCD, Ingress, Cert-manager, Postgres Operator)
@@ -70,6 +70,9 @@ jobs:
         echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+
+    - name: Terraform Init (addons)
+      run: terraform -chdir=terraform init -input=false -reconfigure
 
     - name: Terraform Apply Addons
       run: terraform -chdir=terraform apply -auto-approve
@@ -108,7 +111,7 @@ jobs:
 
     - name: Get AKS Credentials
       run: az aks get-credentials --resource-group rg-aks-postgres --name aks-postgres-cluster --overwrite-existing
-    # Optional: Wait for TLS
+    # Optional: Wait for TLS secrets
     # - name: Wait for ArgoCD TLS Secret
     #   run: |
     #     for i in {1..30}; do
